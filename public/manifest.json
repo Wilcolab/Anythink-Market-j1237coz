@@ -1,0 +1,21 @@
+{
+  "name": "Node Calculator",
+  "short_name": "Calculator",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#1b4076",
+  "theme_color": "#1b4076",
+  "description": "A simple calculator app with REST API backend.",
+  "icons": [
+    {
+      "src": "./assets/calculator.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/calculator.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,9 +1,27 @@
+/*
+    default.css
+
+    Styles for a modern, accessible calculator web interface.
+
+    - BODY: Full viewport background, modern font, and color scheme.
+    - .container: Main calculator container with background image, border-radius, and shadow.
+    - .calculator, .btn: Modernized with rounded corners, hover/active/focus effects, and shadow.
+    - #result: Styled display area for results and errors.
+    - .resultchar, .digit0-9, .decimal, .negative, .exponent: Sprite-based digit and symbol rendering.
+    - .box, .span-2, .calculator-buttons: Layout helpers.
+    - #history-container: Panel for last 10 calculations.
+    - .btn.key-active: Visual feedback for keyboard accessibility.
+    - Responsive design for mobile devices.
+    - Accessibility: Focus styles for keyboard navigation.
+    - PWA: Styles compatible with installable web app.
+*/
 BODY {
     height: 100%;
     width: 100%;
     padding: 0;
     margin: 0;
     background-color: #1b4076;
+    font-family: 'Segoe UI', Arial, sans-serif;
 }
 
 @media screen and (min-device-width: 500px) and (min-device-height: 1024px) {
@@ -27,12 +45,15 @@ BODY {
     min-height: 531px;
     width: 250px;
     padding: 25px;
-    margin: 0 auto;
+    margin: 40px auto 0 auto;
     position: relative;
     background-image: url(background.png);
     background-size: 300px 531px;
     background-repeat: no-repeat;
     background-position: center top;
+    border-radius: 18px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
+    background-color: #f7fafdcc;
 }
 
 #results {
@@ -46,7 +67,7 @@ BODY {
 }
 
 #result {
-    background-color: #9b9b9b;
+    background-color: #f0f0f0;
     width: 226px;
     height: 63px;
     margin: 0;
@@ -55,9 +76,12 @@ BODY {
     border: 0;
     left: 0;
     top: 32px;
-    font-family: system-ui;
-    font-size: 25px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 28px;
     text-align: right;
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    color: #222;
 }
 
 /*BUTTON {
@@ -175,12 +199,90 @@ BODY {
 
 .calculator {
     max-width: 320px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    background: rgba(255,255,255,0.85);
+    padding-bottom: 10px;
 }
 
 .btn {
-    font-size: 1em;
+    font-size: 1.1em;
     height: 45px;
-    border: 1px solid black;
-    background-color: #d5d5d5;
+    border: 1px solid #b0b0b0;
+    background-color: #e6e6e6;
     margin: 4px;
+    border-radius: 8px;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    cursor: pointer;
+    outline: none;
+}
+
+.btn:hover, .btn:focus {
+    background-color: #d0eaff;
+    box-shadow: 0 2px 8px rgba(30,144,255,0.12);
+    transform: translateY(-2px) scale(1.04);
+}
+
+.btn:active {
+    background-color: #b3e0ff;
+    box-shadow: 0 1px 2px rgba(30,144,255,0.18);
+    transform: scale(0.98);
+}
+
+.btn.key-active {
+    background-color: #ffe066 !important;
+    box-shadow: 0 0 0 2px #ffd700, 0 2px 8px rgba(30,144,255,0.12);
+    transform: scale(1.07);
+    transition: background 0.1s, box-shadow 0.1s, transform 0.1s;
+    outline: none;
+}
+
+#history-container {
+    margin-top: 110px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 8px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    padding: 10px 10px 10px 18px;
+    max-height: 120px;
+    overflow-y: auto;
+    font-size: 0.95em;
+}
+#history-container h4 {
+    margin: 0 0 6px 0;
+    font-size: 1em;
+    color: #1b4076;
+}
+#history-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+#history-list li {
+    margin-bottom: 2px;
+    color: #333;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    word-break: break-all;
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: 98vw;
+        min-width: unset;
+        padding: 8px;
+        background-size: cover;
+    }
+    .box {
+        width: 100vw;
+        left: 0;
+    }
+    #result {
+        width: 90vw;
+        font-size: 22px;
+    }
+}
+
+.btn:focus {
+    outline: 2px solid #1b4076;
+    outline-offset: 2px;
 }

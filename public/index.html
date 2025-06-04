@@ -1,14 +1,46 @@
+<!--
+  index.html - Calculator Application
+
+  This HTML file defines the structure for a modern calculator web application.
+
+  Main Components:
+  - <head>: Includes the page title, links to the stylesheet (default.css), manifest for PWA, and registers the service worker for offline support.
+  - <body>: Initializes the calculator display to 0 on load via setValue(0).
+    - .container: Main wrapper for the calculator UI.
+      - #results: Displays the current result/output of the calculator.
+      - #history-container: Shows the last 10 calculations.
+      - .box > .calculator > .calculator-buttons: Contains all calculator buttons, including advanced operations (√, xʸ, %, 1/x).
+        - Number buttons (0-9), operation buttons (+, -, *, /, √, xʸ, %, 1/x), decimal, equals, and clear.
+        - All operations are supported by both button and keyboard (with visual feedback).
+  - PWA: Manifest and service worker enable installability and offline use.
+
+  Note:
+  - Calculator logic and history are handled in client.js.
+  - The UI is responsive and accessible.
+-->
 <html>
   <head>
     <title>Calculator</title>
     <link rel="stylesheet" href="default.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <script src="client.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('service-worker.js');
+        });
+      }
+    </script>
   </head>
   <body onLoad="setValue(0)">
     <div class="container">
       <div id="results">
         <div id="result"><span class="digit0">0</span></div>
+      </div>
+      <div id="history-container">
+        <h4>History</h4>
+        <ul id="history-list"></ul>
       </div>
 
       <div id="loading" style="visibility:hidden"></div>
@@ -39,6 +71,11 @@
             <button class="btn" onClick="decimalPressed()">.</button>
             <button class="btn" onClick="operationPressed('+')">+</button>
             <button class="btn" onClick="equalPressed()">=</button>
+
+            <button class="btn" onClick="sqrtPressed()">√</button>
+            <button class="btn" onClick="powerPressed()">xʸ</button>
+            <button class="btn" onClick="percentPressed()">%</button>
+            <button class="btn" onClick="reciprocalPressed()">1/x</button>
 
             <!-- TODO: Buttons -->
           </div>

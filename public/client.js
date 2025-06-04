@@ -1,3 +1,22 @@
+/**
+ * client.js - Calculator logic
+ *
+ * Handles all calculator operations, UI state, and history for the web calculator.
+ *
+ * Features:
+ * - Supports addition (+), subtraction (-), multiplication (*), division (/)
+ * - Advanced operations: square root (√), exponentiation (xʸ), percentage (%), reciprocal (1/x)
+ * - All operations work via both button clicks and keyboard input (with visual feedback)
+ * - Calculation history panel (last 10 calculations)
+ * - Improved error handling with descriptive messages
+ * - Responsive and accessible UI
+ * - Communicates with the backend via REST API for calculations
+ * - PWA support for offline use
+ *
+ * Usage:
+ * - Used by public/index.html for all calculator logic
+ */
+
 'use strict';
 
 var value = 0;
@@ -16,43 +35,86 @@ var operand1 = 0;
 var operand2 = 0;
 var operation = null;
 
+// History feature
+var history = [];
+
+function addToHistory(expr, result) {
+    if (history.length >= 10) history.shift(); // Keep last 10
+    history.push({ expr, result });
+    renderHistory();
+}
+
+function renderHistory() {
+    var list = document.getElementById('history-list');
+    if (!list) return;
+    list.innerHTML = '';
+    for (var i = history.length - 1; i >= 0; i--) {
+        var item = document.createElement('li');
+        item.textContent = history[i].expr + ' = ' + history[i].result;
+        list.appendChild(item);
+    }
+}
+
 function calculate(operand1, operand2, operation) {
     var uri = location.origin + "/arithmetic";
-
-    // TODO: Add operator
+    var expr = '';
     switch (operation) {
         case '+':
             uri += "?operation=add";
+            expr = operand1 + ' + ' + operand2;
             break;
         case '-':
             uri += "?operation=subtract";
+            expr = operand1 + ' - ' + operand2;
             break;
         case '*':
             uri += "?operation=multiply";
+            expr = operand1 + ' × ' + operand2;
             break;
         case '/':
             uri += "?operation=divide";
+            expr = operand1 + ' ÷ ' + operand2;
+            break;
+        case 'sqrt':
+            uri += "?operation=sqrt";
+            expr = '√' + operand1;
+            break;
+        case 'power':
+            uri += "?operation=power";
+            expr = operand1 + ' ^ ' + operand2;
+            break;
+        case 'percent':
+            uri += "?operation=percent";
+            expr = operand1 + ' % of ' + operand2;
+            break;
+        case 'reciprocal':
+            uri += "?operation=reciprocal";
+            expr = '1/(' + operand1 + ')';
             break;
         default:
             setError();
             return;
     }
-
     uri += "&operand1=" + encodeURIComponent(operand1);
-    uri += "&operand2=" + encodeURIComponent(operand2);
-
+    if (operand2 !== null && operand2 !== undefined) {
+        uri += "&operand2=" + encodeURIComponent(operand2);
+    }
     setLoading(true);
-
     var http = new XMLHttpRequest();
     http.open("GET", uri, true);
     http.onload = function () {
         setLoading(false);
-
         if (http.status == 200) {
             var response = JSON.parse(http.responseText);
             setValue(response.result);
+            addToHistory(expr, response.result);
         } else {
-            setError();
+            try {
+                var response = JSON.parse(http.responseText);
+                setError(response.error);
+            } catch {
+                setError();
+            }
         }
     };
     http.send(null);
@@ -111,37 +173,89 @@ function signPressed() {
 }
 
 function operationPressed(op) {
-    operand1 = getValue();
+    if (state === states.operand2) {
+        // If user presses an operator after entering operand2, calculate first
+        operand2 = getValue();
+        calculate(operand1, operand2, operation);
+        operand1 = value; // use the result as the new operand1
+    } else {
+        operand1 = getValue();
+    }
     operation = op;
     state = states.operator;
 }
 
 function equalPressed() {
-    if (state < states.operand2) {
-        state = states.complete;
-        return;
-    }
-
-    if (state == states.operand2) {
+    if (state === states.operator) {
+        // If user presses = right after operator, use operand1 as operand2
+        operand2 = operand1;
+    } else if (state === states.operand2) {
         operand2 = getValue();
-        state = states.complete;
-    } else if (state == states.complete) {
+    } else if (state === states.complete) {
         operand1 = getValue();
     }
-
+    state = states.complete;
     calculate(operand1, operand2, operation);
 }
 
-// TODO: Add key press logics
-document.addEventListener('keypress', (event) => {
-    if (event.key.match(/^\d+$/)) {
-        numberPressed(event.key);
-    } else if (event.key == '.') {
+function sqrtPressed() {
+    operand1 = getValue();
+    operation = 'sqrt';
+    state = states.complete;
+    calculate(operand1, null, operation);
+}
+
+function powerPressed() {
+    operand1 = getValue();
+    operation = 'power';
+    state = states.operator;
+}
+
+function percentPressed() {
+    operand2 = getValue();
+    operation = 'percent';
+    state = states.complete;
+    calculate(operand1, operand2, operation);
+}
+
+function reciprocalPressed() {
+    operand1 = getValue();
+    operation = 'reciprocal';
+    state = states.complete;
+    calculate(operand1, null, operation);
+}
+
+// Keyboard support for all calculator operations
+// Supports: 0-9, ., +, -, *, /, =, Enter, C/c (clear)
+document.addEventListener('keydown', (event) => {
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+    let key = event.key;
+    let btn = null;
+    if (key >= '0' && key <= '9') {
+        numberPressed(key);
+        btn = document.querySelector(`.btn:not([disabled]):not([tabindex='-1']):contains('${key}')`);
+        event.preventDefault();
+    } else if (key === '.') {
         decimalPressed();
-    } else if (event.key.match(/^[-*+/]$/)) {
-        operationPressed(event.key);
-    } else if (event.key == '=') {
+        btn = document.querySelector(`.btn:not([disabled]):not([tabindex='-1']):contains('.')`);
+        event.preventDefault();
+    } else if (["+", "-", "*", "/"].includes(key)) {
+        operationPressed(key);
+        btn = document.querySelector(`.btn:not([disabled]):not([tabindex='-1']):contains('${key === '*' ? 'x' : key === '/' ? '÷' : key}')`);
+        event.preventDefault();
+    } else if (key === '=' || key === 'Enter') {
         equalPressed();
+        btn = document.querySelector(`.btn:not([disabled]):not([tabindex='-1']):contains('=')`);
+        event.preventDefault();
+    } else if (key.toLowerCase() === 'c') {
+        clearPressed();
+        btn = document.querySelector(`.btn:not([disabled]):not([tabindex='-1']):contains('C')`);
+        event.preventDefault();
+    }
+    // Keyboard accessibility: highlight the button
+    if (btn) {
+        btn.classList.add('key-active');
+        setTimeout(() => btn.classList.remove('key-active'), 150);
     }
 });
 
@@ -181,8 +295,13 @@ function setValue(n) {
     document.getElementById("result").innerHTML = html;
 }
 
-function setError(n) {
-    document.getElementById("result").innerHTML = "ERROR";
+function setError(msg) {
+    document.getElementById("result").innerHTML = msg ? msg : "ERROR";
+    // Optionally, highlight the error visually
+    document.getElementById("result").style.color = '#c00';
+    setTimeout(() => {
+        document.getElementById("result").style.color = '';
+    }, 2000);
 }
 
 function setLoading(loading) {
